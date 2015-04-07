@@ -71,11 +71,11 @@ def save_source(driver, name):
 
     try:
         with open(file_name, 'w') as output_file:
-            output_file.write(source)
+            output_file.write(source.encode('utf-8'))
     except Exception as e:
         msg = "Could not save the browser page source to {}.".format(file_name)
         LOGGER.warning(msg)
-        LOGGER.warning(e.message)
+        LOGGER.warning(e.reason)
 
 
 def save_screenshot(driver, name):
