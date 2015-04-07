@@ -3,7 +3,6 @@ Use environment variables to configure Selenium remote WebDriver.
 For use with SauceLabs (via SauceConnect) or local browsers.
 """
 import os
-import datetime
 import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -67,15 +66,16 @@ def save_source(driver, name):
         None
     """
     source = driver.page_source
-    file_name = os.path.join(os.environ.get('SAVED_SOURCE_DIR', ''),
+    file_name = os.path.join(os.environ.get('SAVED_SOURCE_DIR'),
         '{name}.html'.format(name=name))
 
     try:
         with open(file_name, 'w') as output_file:
             output_file.write(source)
-    except:
+    except Exception as e:
         msg = "Could not save the browser page source to {}.".format(file_name)
         LOGGER.warning(msg)
+        LOGGER.warning(e.message)
 
 
 def save_screenshot(driver, name):
@@ -95,7 +95,7 @@ def save_screenshot(driver, name):
     """
     if hasattr(driver, 'save_screenshot'):
         image_name = os.path.join(
-            os.environ.get('SCREENSHOT_DIR', ''), name + '.png'
+            os.environ.get('SCREENSHOT_DIR'), name + '.png'
         )
         driver.save_screenshot(image_name)
 
@@ -128,7 +128,7 @@ def save_driver_logs(driver, prefix):
         try:
             log = driver.get_log(log_type)
             file_name = os.path.join(
-                os.environ.get('SELENIUM_DRIVER_LOG_DIR', ''), '{}_{}.log'.format(
+                os.environ.get('SELENIUM_DRIVER_LOG_DIR'), '{}_{}.log'.format(
                     prefix, log_type)
             )
             with open(file_name, 'w') as output_file:
