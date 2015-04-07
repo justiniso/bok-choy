@@ -3,6 +3,7 @@ Use environment variables to configure Selenium remote WebDriver.
 For use with SauceLabs (via SauceConnect) or local browsers.
 """
 import os
+import datetime
 import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -47,6 +48,34 @@ class BrowserConfigError(Exception):
     Misconfiguration error in the environment variables.
     """
     pass
+
+
+def save_source(driver, name):
+    """
+    Save the rendered HTML of the browser.
+
+    The location of the source can be configured
+    by the environment variable `SAVED_SOURCE_DIR`.  If not set,
+    this defaults to the current working directory.
+
+    Args:
+        driver (selenium.webdriver): The Selenium-controlled browser.
+        name (str): A name to use in the output file name.
+            Note that ".html" is appended automatically
+
+    Returns:
+        None
+    """
+    source = driver.page_source
+    file_name = os.path.join(os.environ.get('SAVED_SOURCE_DIR', ''),
+        '{name}.html'.format(name=name))
+
+    try:
+        with open(file_name, 'w') as output_file:
+            output_file.write(source)
+    except:
+        msg = "Could not save the browser page source to {}.".format(file_name)
+        LOGGER.warning(msg)
 
 
 def save_screenshot(driver, name):

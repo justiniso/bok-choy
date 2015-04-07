@@ -1,11 +1,11 @@
-import tempfile
-import shutil
-import os
-from selenium import webdriver
-import bok_choy.browser
-from unittest import TestCase
 from mock import patch
+import os
+import shutil
+from selenium import webdriver
+import tempfile
+from unittest import TestCase
 
+import bok_choy.browser
 from .pages import ButtonPage, JavaScriptPage
 
 
@@ -22,19 +22,28 @@ class TestBrowser(TestCase):
         with self.assertRaises(bok_choy.browser.BrowserConfigError):
             bok_choy.browser.browser()
 
-    def test_save_screenshot(self):
 
-        # Create a temp directory to save the screenshot to
+class TestSaveFiles(TestCase):
+
+    def setUp(self):
+        super(TestSaveFiles, self).setUp()
+
+        # Create a temp directory to save the files to
         tempdir_path = tempfile.mkdtemp()
         self.addCleanup(lambda: shutil.rmtree(tempdir_path))
-
-        # Configure the screenshot directory using an environment variable
-        os.environ['SCREENSHOT_DIR'] = tempdir_path
 
         # Take a screenshot of a page
         browser = bok_choy.browser.browser()
         self.addCleanup(browser.quit)
+        self.browser = browser
+        self.tempdir_path = tempdir_path
 
+    def test_save_screenshot(self):
+        browser = self.browser
+        tempdir_path = self.tempdir_path
+
+        # Configure the screenshot directory using an environment variable
+        os.environ['SCREENSHOT_DIR'] = tempdir_path
         ButtonPage(browser).visit()
         bok_choy.browser.save_screenshot(browser, 'button_page')
 
@@ -46,18 +55,11 @@ class TestBrowser(TestCase):
         self.assertGreater(os.stat(expected_file).st_size, 100)
 
     def test_save_driver_logs(self):
+        browser = self.browser
+        tempdir_path = self.tempdir_path
 
-        # Create a temp directory to save the driver logs to
-        tempdir_path = tempfile.mkdtemp()
-        self.addCleanup(lambda: shutil.rmtree(tempdir_path))
-
-        # Configure the screenshot directory using an environment variable
+        # Configure the driver log directory using an environment variable
         os.environ['SELENIUM_DRIVER_LOG_DIR'] = tempdir_path
-
-        # Start up the browser
-        browser = bok_choy.browser.browser()
-        self.addCleanup(browser.quit)
-
         JavaScriptPage(browser).visit()
         bok_choy.browser.save_driver_logs(browser, 'js_page')
 
@@ -67,3 +69,19 @@ class TestBrowser(TestCase):
         for log_type in log_types:
             expected_file = os.path.join(tempdir_path, 'js_page_{}.log'.format(log_type))
             self.assertTrue(os.path.isfile(expected_file))
+
+    def test_save_source(self):
+        browser = self.browser
+        tempdir_path = self.tempdir_path
+
+        # Configure the saved source directory using an environment variable
+        os.environ['SAVED_SOURCE_DIR'] = tempdir_path
+        ButtonPage(browser).visit()
+        bok_choy.browser.save_source(browser, 'button_page')
+
+        # Check that the file was created
+        expected_file = os.path.join(tempdir_path, 'button_page.html')
+        self.assertTrue(os.path.isfile(expected_file))
+
+        # Check that the file is not empty
+        self.assertGreater(os.stat(expected_file).st_size, 100)
